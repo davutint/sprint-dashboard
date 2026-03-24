@@ -3,7 +3,7 @@
 > **Başlangıç:** 23 Mart 2026
 > **Bitiş Hedefi:** 22 Nisan 2026 (30 gün)
 > **Toplam Bütçe:** 50.000$ (Ay 0: 40.000$ + Ay 1: 10.000$)
-> **Durum:** Aktif
+> **Durum:** Devam Ediyor (P0-1 kod tamamlandı, test bekliyor)
 
 ### Kaynak Dokümanlar
 > Bu sprint planı aşağıdaki Notion milestone dokümanlarından (`C:\Users\PC\Downloads\MILESTONES\`) türetilmiştir:
@@ -165,53 +165,70 @@ MasterVolume, SFXVolume, MusicVolume, AmbientVolume, MouseSensitivity, FOV, Inve
 
 ---
 
-## [L] P0-1) Yolcu Rastgeleliği — BAŞLAT (25-29 Mart → Hafta 2'ye taşar)
+## [S] P0-1) NPC Tekrar Sorunu — ✅ KOD TAMAMLANDI (24 Mart)
 
-> ⚠️ RİSK: En büyük Ay 0 işi. `SmartNPCSpawner` 1.707 satır, dikkatli refactor gerekli.
-> **Dosya:** `SmartNPCSpawner.cs`, `DayConfigSO`, `GameSaveData.cs`
+> **Sorun:** Testerlar aynı görünümlü NPC'lerin arka arkaya spawn olduğunu bildirdi.
+> **Kök neden:** (1) DayConfig'de NPC isimleri hardcoded → her oynayışta aynı. (2) Random prefab seçiminde hafıza yok → aynı prefab arka arkaya gelebilir.
+> **Dosya:** `NPCPoolManager.cs`, `NPCPrefabDatabase.cs`
+>
+> ~~**Eski plan (İPTAL):** SaveSeedGenerator, WeightedPassengerPool, hibrit mod — mevcut sistem zaten yeterli, bu overkill'di.~~
 
-### 25-27 Mart — Seed Altyapısı
-- [ ] `[CLAUDE]` `SaveSeedGenerator` sınıfı oluştur
-  - Yeni kayıt: `saveSeed = hash(timestamp + slotId)`
-  - Gün bazlı: `daySeed = hash(saveSeed + dayIndex)`
-- [ ] `[CLAUDE]` `GameSaveData`'ya `saveSeed` alanı ekle
-- [ ] `[CLAUDE]` Save/Load sırasında seed korunması
+### ✅ 24 Mart — Cooldown Queue Sistemi `[CLAUDE]`
+- [x] `[CLAUDE]` `NPCPoolManager`'a cooldown queue eklendi
+  - Gender bazlı ayrı kuyruk (erkek/kadın)
+  - Cooldown boyutu = `prefabCount - 1` → her prefab tüm tur bekler
+  - Hard atanmış prefab'lar cooldown'a girmiyor
+- [x] `[CLAUDE]` `NPCPrefabDatabase`'e `GetPrefabList(gender)` erişim metodu eklendi
+- [x] `[CLAUDE]` `ReturnAllToPool()`'da cooldown temizleniyor (yeni gün = temiz başlangıç)
 
-### 28-29 Mart — Weighted Pool Başlangıcı
-- [ ] `[CLAUDE]` `WeightedPassengerPool` sınıfı oluştur (iskelet)
-  - Ülke, risk seviyesi, bavul türü, sahtecilik türü ağırlıkları
-- [ ] `[CLAUDE]` `PassengerProfileTag` struct oluştur
-> **Hafta 2'de devam edecek →**
+### ⏳ Test (DEV)
+- [ ] `[DEV]` DayConfig'lerdeki hardcoded NPC isimlerini sil (auto-generate'e bırak)
+- [ ] `[DEV]` Free loop'ta test → arka arkaya aynı prefab gelmiyor mu?
+- [ ] `[DEV]` `showDebugMessages = true` ile Console'da cooldown loglarını kontrol et
+- [ ] `[DEV]` Senaryolu günlerde hard atanmış prefab'lar bozulmamış mı?
 
 ---
 
-## [L] P0-2) Cursor / ESC / Etkileşim Kilidi — BAŞLAT (27-29 Mart → Hafta 2'ye taşar)
+## [L] P0-2) Cursor / ESC / Etkileşim Kilidi — ✅ KOD TAMAMLANDI (24 Mart)
 
-> ⚠️ RİSK: En riskli madde. 5+ fix yapılmış, hâlâ edge case var. Merkezi sistem yazmak büyük refactor.
-> **Dosyalar:** `InteractionSystem.cs`, `UGOPauseIntegration.cs`, `CursorManager.cs` + 6 entegrasyon noktası
+> **Sorun:** İmleç kaybı, ESC tutarsızlığı, Alt+Tab sonrası bozulma. 5+ yama yapılmış, hiçbiri kalıcı olmamıştı.
+> **Kök neden:** 4 bağımsız sistem (CursorManager, InteractionSystem ESC yığını, DeskFlowStateManager, DialogueCharacterController) birbirinden habersiz imleç/ESC yönetiyordu.
+> **Karar:** Seçenek A — sıfırdan `InputStateManager` yazıldı (bilet/token tabanlı merkezi durum yönetimi)
+> **Dosyalar:** `InputStateManager.cs` (YENİ), `InputState.cs` (YENİ) + 26 dosya geçirildi
+> **Dokümanlar:** `INPUT_STATE_ANALYSIS.md`, `INPUT_STATE_MIGRATION.md`
 
-### 🔒 KARAR NOKTASI — Strateji
-> Seçenek A: Sıfırdan `InputStateManager` yaz (temiz ama riskli, her sistemi değiştirmek lazım)
-> Seçenek B: Mevcut yapıyı güçlendir + watchdog ekle (güvenli ama uzun vadede yine sorun çıkabilir)
-> **Öneri:** Seçenek B ile başla, kritik edge case'leri kapat. Sıfırdan yazma riski 30 günlük sprint'te çok yüksek.
+### ✅ 23-24 Mart — Araştırma + Tasarım + Uygulama `[CLAUDE]`
+- [x] `[CLAUDE]` 21 dosya analiz edildi — tüm imleç/ESC/girdi değişiklik noktaları satır numaralarıyla belgelendi
+- [x] `[CLAUDE]` DEV ile doğrulama — deprecated kodlar, kullanılmayan scriptler, tasarım kararları
+- [x] `[CLAUDE]` Durum geçiş haritası, kamera animasyonları, SetDialogueMode, UGO pause araştırıldı
+- [x] `[CLAUDE]` InputStateManager tasarımı tartışıldı — bilet sistemi, Inherit katmanları, Alt+Tab koruması
+- [x] `[CLAUDE]` `InputStateManager.cs` yazıldı (22 durum, bilet mekanizması, GetCurrentConfig ile taze Inherit çözümleme)
+- [x] `[CLAUDE]` 26 dosya geçirildi (CursorManager/Push/Pop/SetDialogueMode → EnterState/ReleaseState)
+- [x] `[CLAUDE]` Bug fix: HandleEscape token'ı ÖNCE çıkarır SONRA callback (eski pattern uyumu)
+- [x] `[CLAUDE]` Bug fix: Inherit çözümleme ResolvedConfig yerine BASE config kullanır (Tutorial+Narrator aynı anda sorunu)
+- [x] `[CLAUDE]` Bug fix: DeskFree Movement=Enabled (sınırlı fare bakışı çalışsın)
 
-### 27-29 Mart — Analiz + Watchdog
-- [ ] `[CLAUDE]` Mevcut ESC handler stack'i tam analiz — tüm Push/Pop noktalarını listele
-- [ ] `[CLAUDE]` Cursor watchdog ekle: UI açık + cursor görünmez → 0.1sn otomatik kurtarma
-- [ ] `[CLAUDE]` Bilinen edge case'leri listele (memory'deki 5+ fix kaydından)
-> **Hafta 2'de devam edecek →**
+### ⏳ Test (DEV)
+- [ ] `[DEV]` Masaya otur → belge incele → onay/ret → ayağa kalk
+- [ ] `[DEV]` Masadayken telefon çalsın → yanıtla → narrator → ESC×2
+- [ ] `[DEV]` Ayaktayken TAB menü → ESC kapat
+- [ ] `[DEV]` Pazarlık → ESC iptal, kabul et
+- [ ] `[DEV]` Alt+Tab: ayakta, masada, telefonda, menüde — her durumdan
+- [ ] `[DEV]` ESC spam (10sn'de 30 basış) → sıkışma yok
+- [ ] `[DEV]` Console'da hata/uyarı yok
+- [ ] `[DEV]` Tutorial açık → narrator başlar → tutorial kapat → hareket geri geliyor mu?
 
 ---
 
 ### 📊 HAFTA 1 KONTROL NOKTASI (29 Mart Pazar)
 
-| Madde | Hedef Durum |
-|-------|-------------|
+| Madde | Durum |
+|-------|-------|
+| P0-1 (NPC Tekrar) | ✅ Kod bitti, DEV testi bekliyor |
 | P0-4 (Ayarlar) | ✅ Bitti |
-| P0-6 (Tutorial) | ✅ Bitti |
-| P0-3 (UI Toast) | ✅ Bitti veya %80 |
-| P0-1 (Rastgelelik) | 🔄 Seed + Pool iskeleti hazır |
-| P0-2 (ESC/Cursor) | 🔄 Analiz + watchdog hazır |
+| P0-6 (Tutorial) | ⏳ Yapılacak |
+| P0-3 (UI Toast) | ⏳ Yapılacak |
+| P0-2 (ESC/Cursor) | ✅ Kod bitti, DEV testi bekliyor |
 | P0-5 (Fizik) | ⏳ Henüz başlamadı |
 
 ---
@@ -224,52 +241,18 @@ MasterVolume, SFXVolume, MusicVolume, AmbientVolume, MouseSensitivity, FOV, Inve
 
 ---
 
-## [L] P0-1) Yolcu Rastgeleliği — DEVAM (30 Mart - 3 Nisan)
+## ~~[L] P0-1) Yolcu Rastgeleliği~~ — ✅ BİTTİ (Hafta 1'de tamamlandı)
 
-### 30-31 Mart — Hibrit Mod Entegrasyonu
-- [ ] `[CLAUDE]` `SmartNPCSpawner`'a hibrit mod ekle:
-  - Hikaye/görev NPC'leri → sabit (`DayConfigSO.npcSpawns`)
-  - Dolgu NPC'ler → `WeightedPassengerPool`'dan seed bazlı rastgele
-- [ ] `[CLAUDE]` Gün ilerledikçe risk ağırlığı artış mantığı
-
-### 1-2 Nisan — Debug Araçları + Test
-- [ ] `[CLAUDE]` CheatPanel'e "Seed Göster" butonu
-- [ ] `[CLAUDE]` CheatPanel'e "Sonraki 10 Yolcuyu Üret" komutu
-- [ ] `[CLAUDE]` Yolcu log sistemi (ID + seed + anomali türü)
-
-### ✅ Test (2-3 Nisan)
-- [ ] `[DEV]` 3 farklı kayıtta aynı gün → %90+ farklı dizi?
-- [ ] `[DEV]` Aynı kayıtta aynı gün tekrar → aynı dizi?
-- [ ] `[DEV]` Quest NPC'leri bozulmamış mı?
-- [ ] `[DEV]` Mevcut DayConfigSO.npcSpawns sistemi çalışıyor mu?
+> Cooldown queue sistemi ile çözüldü. Seed/WeightedPool gerekmedi.
+> Detaylar için Hafta 1 P0-1 bölümüne bak.
 
 ---
 
-## [L] P0-2) Cursor / ESC — DEVAM (30 Mart - 4 Nisan)
+## ~~[L] P0-2) Cursor / ESC~~ — ✅ BİTTİ (Hafta 1'de tamamlandı)
 
-### 30-31 Mart — ESC Yığını İyileştirme
-- [ ] `[CLAUDE]` ESC öncelik sırası uygula: modal → PC ekranı → diyalog → pause
-- [ ] `[CLAUDE]` Tüm `PopEscapeHandler` delegate eşleşmelerini doğrula + düzelt
-- [ ] `[CLAUDE]` Stale handler birikme sorununa kalıcı çözüm
-
-### 1-2 Nisan — Sistem Entegrasyonları
-- [ ] `[CLAUDE]` `InteractionSystem` ESC davranışını güçlendir
-- [ ] `[CLAUDE]` `RadialInventoryManager` cursor entegrasyonu
-- [ ] `[CLAUDE]` `PhoneInteractable` cursor entegrasyonu
-- [ ] `[CLAUDE]` `BargainSession` cursor entegrasyonu
-- [ ] `[CLAUDE]` `DeskChairController` durum geçişlerini kontrol et
-
-### 3-4 Nisan — Edge Case Avcılığı
-- [ ] `[CLAUDE]` Radyal menü toggle döngüsü kontrolü (frame-count koruması)
-- [ ] `[CLAUDE]` UGO pause çift subscription kontrolü
-- [ ] `[CLAUDE]` Telefon ESC stale handler kontrolü
-
-### ✅ Test (4 Nisan) — ⚠️ RİSK: En kritik test
-- [ ] `[DEV]` PC ekranına 50 giriş/çıkış → 0 cursor kaybı?
-- [ ] `[DEV]` ESC spam (10sn'de 30 basış) → durum sağlam mı?
-- [ ] `[DEV]` Seslendirme + ESC → softlock yok mu?
-- [ ] `[DEV]` Console'da mismatch uyarısı yok mu?
-- [ ] `[DEV]` Radyal menü TAB basılı tutma → döngü yok mu?
+> InputStateManager ile kökünden çözüldü. Eski ESC yığını, CursorManager kararları,
+> SetDialogueMode flag'leri kaldırıldı. Bilet (token) sistemi Push/Pop eşleşme hatalarını
+> yapısal olarak imkansız kıldı. Detaylar için Hafta 1 P0-2 bölümüne bak.
 
 ---
 
@@ -315,16 +298,16 @@ MasterVolume, SFXVolume, MusicVolume, AmbientVolume, MouseSensitivity, FOV, Inve
 
 ### 📊 HAFTA 2 KONTROL NOKTASI (5 Nisan Pazar)
 
-| Madde | Hedef Durum |
-|-------|-------------|
-| P0-1 (Rastgelelik) | ✅ Bitti |
-| P0-2 (ESC/Cursor) | ✅ Bitti |
-| P0-3 (UI Toast) | ✅ Bitti |
-| P0-4 (Ayarlar) | ✅ Bitti (Hafta 1) |
-| P0-5 (Fizik) | ✅ Bitti |
-| P0-6 (Tutorial) | ✅ Bitti (Hafta 1) |
-| P0-R (Refactor) | ✅ Bitti |
-| **AY 0 TAMAMLANDI** | 🎯 |
+| Madde | Durum |
+|-------|-------|
+| P0-1 (NPC Tekrar) | ✅ Bitti (Hafta 1'de tamamlandı) |
+| P0-2 (ESC/Cursor) | ⏳ Yapılacak |
+| P0-3 (UI Toast) | ⏳ Yapılacak |
+| P0-4 (Ayarlar) | ✅ Bitti (Hafta 1'de tamamlandı) |
+| P0-5 (Fizik) | ⏳ Yapılacak |
+| P0-6 (Tutorial) | ⏳ Yapılacak |
+| P0-R (Refactor) | ⏳ Yapılacak |
+| **AY 0 TAMAMLANDI** | ⏳ |
 
 ---
 
@@ -438,10 +421,10 @@ MasterVolume, SFXVolume, MusicVolume, AmbientVolume, MouseSensitivity, FOV, Inve
 
 ### 📊 HAFTA 3 KONTROL NOKTASI (12 Nisan Pazar)
 
-| Madde | Hedef Durum |
+| Madde | Durum |
 |-------|-------------|
-| M1-G1 (Hapishane) | ✅ Bitti |
-| M1-G4 (Etiketli NPC) | ✅ Bitti |
+| M1-G1 (Hapishane) | ⏳ Yapılacak |
+| M1-G4 (Etiketli NPC) | ⏳ Yapılacak |
 | M1-G2 (Guard AI) | ⏳ Hafta 4'te |
 | M1-G3 (Rüşvet) | ⏳ Hafta 4'te |
 
@@ -537,12 +520,12 @@ MasterVolume, SFXVolume, MusicVolume, AmbientVolume, MouseSensitivity, FOV, Inve
 
 ### 📊 HAFTA 4 KONTROL NOKTASI (19 Nisan Cumartesi)
 
-| Madde | Hedef Durum |
+| Madde | Durum |
 |-------|-------------|
-| M1-G2 (Guard AI) | ✅ Bitti |
-| M1-G3 (Rüşvet) | ✅ Bitti |
-| M1-G4b (Ortam Cilası) | ✅ Bitti |
-| **AY 1 TAMAMLANDI** | 🎯 |
+| M1-G2 (Guard AI) | ⏳ Yapılacak |
+| M1-G3 (Rüşvet) | ⏳ Yapılacak |
+| M1-G4b (Ortam Cilası) | ⏳ Yapılacak |
+| **AY 1 TAMAMLANDI** | ⏳ |
 
 ---
 
@@ -558,7 +541,7 @@ MasterVolume, SFXVolume, MusicVolume, AmbientVolume, MouseSensitivity, FOV, Inve
   - Rüşvet kabul → yolsuzluk artsın → denetim tetiklensin
   - Etiketli NPC tutukla → defterde etiket görünsün
 - [ ] `[DEV]` Save/Load entegrasyon testi:
-  - Tüm yeni veriler (seed, mahkum, etiket, yolsuzluk) korunuyor mu?
+  - Tüm yeni veriler (mahkum, etiket, yolsuzluk) korunuyor mu?
 - [ ] `[DEV]` ESC/Cursor entegrasyon testi:
   - Defter açık + ESC → doğru kapanıyor mu?
   - Rüşvet UI + cursor → kaybolmuyor mu?
@@ -581,8 +564,8 @@ MasterVolume, SFXVolume, MusicVolume, AmbientVolume, MouseSensitivity, FOV, Inve
 ## 30 Günlük Zaman Çizelgesi (Özet)
 
 ```
-HAFTA 1 (23-29 Mart):  P0-4 ✅ | P0-6 ✅ | P0-3 ✅ | P0-1 başla | P0-2 başla
-HAFTA 2 (30-5 Nisan):  P0-1 ✅ | P0-2 ✅ | P0-5 ✅ | P0-R ✅ → AY 0 BİTTİ
+HAFTA 1 (23-29 Mart):  P0-4 ✅ | P0-6 ✅ | P0-3 ✅ | P0-1 ✅ (24 Mart bitti!) | P0-2 başla
+HAFTA 2 (30-5 Nisan):  P0-2 ✅ | P0-5 ✅ | P0-R ✅ → AY 0 BİTTİ
 HAFTA 3 (6-12 Nisan):  M1-G1 ✅ | M1-G4 ✅ (paralel)
 HAFTA 4 (13-19 Nisan): M1-G3 ✅ | M1-G2 ✅ | M1-G4b ✅ → AY 1 BİTTİ
 TAMPON  (20-22 Nisan): Entegrasyon test + bug fix + kapanış
@@ -609,9 +592,9 @@ M1-G4b (Ortam Cilası) ───→ M1-G1 bitmeli
 
 | Dosya | Hafta | Sorumluluk |
 |-------|-------|------------|
-| `SaveSeedGenerator.cs` | 1 | `[CLAUDE]` |
-| `WeightedPassengerPool.cs` | 1-2 | `[CLAUDE]` |
-| `PassengerProfileTag.cs` | 1 | `[CLAUDE]` |
+| ~~`SaveSeedGenerator.cs`~~ | ~~1~~ | ~~`[CLAUDE]`~~ İPTAL — gerek kalmadı |
+| ~~`WeightedPassengerPool.cs`~~ | ~~1-2~~ | ~~`[CLAUDE]`~~ İPTAL — gerek kalmadı |
+| ~~`PassengerProfileTag.cs`~~ | ~~1~~ | ~~`[CLAUDE]`~~ İPTAL — gerek kalmadı |
 | `PrisonerCase.cs` | 3 | `[CLAUDE]` |
 | `PrisonLedgerUI.cs` | 3 | `[CLAUDE]` + `[DEV]` UI prefab |
 | `DecisionOutcomeProcessor.cs` | 4 | `[CLAUDE]` |
@@ -621,7 +604,9 @@ M1-G4b (Ortam Cilası) ───→ M1-G1 bitmeli
 
 | Dosya | Satır | Hafta | Değişiklik |
 |-------|-------|-------|------------|
-| `SmartNPCSpawner.cs` | 1.707 | 1-2 | Hibrit mod + weighted pool |
+| ~~`SmartNPCSpawner.cs`~~ | ~~1.707~~ | ~~1-2~~ | ~~Hibrit mod + weighted pool~~ İPTAL — dokunulmadı |
+| `NPCPoolManager.cs` | 773 | 1 | Cooldown queue sistemi ✅ |
+| `NPCPrefabDatabase.cs` | 207 | 1 | GetPrefabList erişim metodu ✅ |
 | `NPCEntity.cs` | 1.211 | 2-3 | AffiliationTag + FollowPlayer state |
 | `JailController.cs` | 493 | 3 | PrisonerCase entegrasyonu |
 | `ArrestManager.cs` | 573 | 3 | Guard eskort akışı |
@@ -631,7 +616,7 @@ M1-G4b (Ortam Cilası) ───→ M1-G1 bitmeli
 | `MoralityManager.cs` | ~200 | 4 | Yolsuzluk kademe sistemi |
 | `ScoreManager.cs` | 1.078 | 4 | DecisionOutcomeProcessor entegrasyonu |
 | `DayEndReportData.cs` | 142 | 4 | Açıklama satırları |
-| `GameSaveData.cs` | ~300 | 1-3 | Seed + PrisonerCase + etiket |
+| `GameSaveData.cs` | ~300 | 3 | PrisonerCase + etiket (~~Seed~~ iptal) |
 | `GameEventBus.cs` | ~800 | 2 | Yeni event'ler |
 | `BargainSession.cs` | 353 | 4 | Rüşvet UI iyileştirme |
 | `ToolOutlineManager.cs` | ~200 | 1 | Tutarlı highlight |
@@ -643,7 +628,7 @@ M1-G4b (Ortam Cilası) ───→ M1-G1 bitmeli
 |-------|------|-------|
 | P0-2 (ESC/Cursor) | 🔴 Yüksek | 5+ fix yapılmış hâlâ sorun var. Her sisteme dokunuyor. |
 | M1-G1 Defter UI | 🔴 Yüksek | UI işleri her zaman tahmin edilenden uzun sürer. |
-| P0-1 (Rastgelelik) | 🟡 Orta | SmartNPCSpawner 1.707 satır, refactor riski. |
+| P0-1 (NPC Tekrar) | ✅ Çözüldü | Cooldown queue ile minimal değişiklik, SmartNPCSpawner'a dokunulmadı. |
 | M1-G2 (Guard AI) | 🟡 Orta | Behavior Designer tree değişiklikleri kırılgan. |
 | P0-5 (Fizik) | 🟡 Orta | Kapsam kontrolü zor — yüzlerce prefab var. |
 | P0-4 (Ayarlar) | 🟢 Düşük | Küçük, izole iş. |
