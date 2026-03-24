@@ -229,7 +229,7 @@ MasterVolume, SFXVolume, MusicVolume, AmbientVolume, MouseSensitivity, FOV, Inve
 | P0-6 (Tutorial) | ⏳ Yapılacak |
 | P0-3 (UI Toast) | ⏳ Yapılacak |
 | P0-2 (ESC/Cursor) | ✅ Kod bitti, DEV testi bekliyor |
-| P0-5 (Fizik) | ⏳ Henüz başlamadı |
+| P0-5 (Fizik) | ✅ Drug fix + zıplama bitti, duvar collider DEV'de, NPC clipping ertelendi |
 
 ---
 
@@ -260,28 +260,32 @@ MasterVolume, SFXVolume, MusicVolume, AmbientVolume, MouseSensitivity, FOV, Inve
 
 > **Dosyalar:** Prefab'lar, NavMesh, çeşitli controller'lar
 
-### 1-2 Nisan — Collider Denetimi
-- [ ] `[CLAUDE]` Kritik objelerin collider durumunu taramak için editor script yaz
-- [ ] `[DEV]` Script'i çalıştır, sonuçları paylaş
-- [ ] `[DEV]` Kapılar, duvarlar, masalar, turnstile, hapishane alanı — collider kontrolü
-- [ ] `[CLAUDE]` Eksik collider'ları ekle / düzelt
+### ✅ 24 Mart — Zıplama Yüksekliği (E1)
+- [x] `[DEV]` Zıplama yüksekliği düzeltildi (test bekliyor)
 
-### 3-4 Nisan — Bırakma Standardı + Softlock Önleme
-- [ ] `[CLAUDE]` Bırakma fizik standardı tanımla ve uygula:
-  - Rigidbody etkinleştir + çarpışma layer'ı + otururken dondur
-  - Havada kalma önleme: hız ~0 + temas yok → zemine yapıştır
-- [ ] `[CLAUDE]` Oyuncu sıkışma algılayıcı (2sn hareketsiz + çarpışma → kurtulma ışınlanması)
-- [ ] `[CLAUDE]` `SuitcaseItemController` ve `DrugItemController` bırakma düzeltmesi
+### ✅ 24 Mart — Drug Havada Kalma (E2) `[CLAUDE]`
+- [x] `[CLAUDE]` `DrugItemController.CanBeThrown => false` — drug fırlatılamaz
+- [x] `[CLAUDE]` `EnhancedItemInspector.OnCancelPerformed`'da drug için RMB drop engeli (V5)
+- [x] `[CLAUDE]` Drug'a özel hint array'leri — sadece "Inspect" + opsiyonel "Place" gösteriliyor
+- **Kök neden:** Bavul itemlarından drop/throw kaldırılmıştı ama drug'a uygulanmamıştı. Oyuncu RMB ile drug'ı bırakınca havada asılı kalıyordu.
+- **Çözüm:** Drop ve throw tamamen devre dışı bırakıldı — drug sadece confiscate edilmek için alınır.
+- **Dosyalar:** `DrugItemController.cs`, `EnhancedItemInspector.cs`
 
-### 5 Nisan — NPC Kesişme
-- [ ] `[DEV]` NavMesh yeniden pişir (agent radius kontrolü)
-- [ ] `[CLAUDE]` Agent avoidance ayarlarını optimize et
-- [ ] `[DEV]` Kuyruk alanı ve hapishane girişinde test
+### Duvar Collider Eksikliği (A5) — `[DEV]`
+- [ ] `[DEV]` Tester videosundaki (t=1954, t=1979) bölgelerde collider kontrolü
+- [ ] `[DEV]` Eksik duvar collider'larını düzelt
 
-### ✅ Test (5 Nisan)
-- [ ] `[DEV]` 1 saatlik QA yürüyüşü → 0 softlock?
-- [ ] `[DEV]` 50 eşya bırakma → havada kalma yok?
-- [ ] `[DEV]` Kuyrukta NPC kesişme azaldı mı?
+### NPC Kesişme (E4) — ⏳ AI Yol Haritasına Ertelendi
+> NPC clipping sorunu NavMesh/avoidance ayarı gerektiriyor. M1-G2 (Guard AI) kapsamında veya
+> sonraki AI geliştirme sprint'inde ele alınacak. Şimdilik ertelendi.
+
+### ✅ Test (DEV)
+- [ ] `[DEV]` Drug'ı E ile al → RMB bas → **elde kalmalı** (drop olmamalı)
+- [ ] `[DEV]` Drug'ı E ile al → LMB bas → **throw charge başlamamalı**
+- [ ] `[DEV]` Drug hint'lerinde sadece "R: Inspect" görünmeli
+- [ ] `[DEV]` Drug'ı confiscation cabinet'e koy → **normal çalışmalı**
+- [ ] `[DEV]` Bavul itemları hâlâ önceki gibi çalışmalı (regresyon yok)
+- [ ] `[DEV]` Zıplama yüksekliği gercekçi hissediyor mu?
 
 ---
 
@@ -301,10 +305,10 @@ MasterVolume, SFXVolume, MusicVolume, AmbientVolume, MouseSensitivity, FOV, Inve
 | Madde | Durum |
 |-------|-------|
 | P0-1 (NPC Tekrar) | ✅ Bitti (Hafta 1'de tamamlandı) |
-| P0-2 (ESC/Cursor) | ⏳ Yapılacak |
+| P0-2 (ESC/Cursor) | ✅ Kod bitti (Hafta 1'de), DEV testi bekliyor |
 | P0-3 (UI Toast) | ⏳ Yapılacak |
 | P0-4 (Ayarlar) | ✅ Bitti (Hafta 1'de tamamlandı) |
-| P0-5 (Fizik) | ⏳ Yapılacak |
+| P0-5 (Fizik) | ✅ Drug fix bitti, zıplama DEV halletti, duvar collider DEV'de, NPC clipping ertelendi |
 | P0-6 (Tutorial) | ⏳ Yapılacak |
 | P0-R (Refactor) | ⏳ Yapılacak |
 | **AY 0 TAMAMLANDI** | ⏳ |
@@ -564,10 +568,10 @@ MasterVolume, SFXVolume, MusicVolume, AmbientVolume, MouseSensitivity, FOV, Inve
 ## 30 Günlük Zaman Çizelgesi (Özet)
 
 ```
-HAFTA 1 (23-29 Mart):  P0-4 ✅ | P0-6 ✅ | P0-3 ✅ | P0-1 ✅ (24 Mart bitti!) | P0-2 başla
-HAFTA 2 (30-5 Nisan):  P0-2 ✅ | P0-5 ✅ | P0-R ✅ → AY 0 BİTTİ
-HAFTA 3 (6-12 Nisan):  M1-G1 ✅ | M1-G4 ✅ (paralel)
-HAFTA 4 (13-19 Nisan): M1-G3 ✅ | M1-G2 ✅ | M1-G4b ✅ → AY 1 BİTTİ
+HAFTA 1 (23-29 Mart):  P0-4 ✅ | P0-1 ✅ kod | P0-2 ✅ kod | P0-5 ✅ drug fix + zıplama DEV
+HAFTA 2 (30-5 Nisan):  P0-6 | P0-3 | P0-5 duvar collider DEV | P0-R → AY 0 BİTTİ
+HAFTA 3 (6-12 Nisan):  M1-G1 | M1-G4 (paralel)
+HAFTA 4 (13-19 Nisan): M1-G3 | M1-G2 | M1-G4b → AY 1 BİTTİ
 TAMPON  (20-22 Nisan): Entegrasyon test + bug fix + kapanış
 ```
 
@@ -619,6 +623,8 @@ M1-G4b (Ortam Cilası) ───→ M1-G1 bitmeli
 | `GameSaveData.cs` | ~300 | 3 | PrisonerCase + etiket (~~Seed~~ iptal) |
 | `GameEventBus.cs` | ~800 | 2 | Yeni event'ler |
 | `BargainSession.cs` | 353 | 4 | Rüşvet UI iyileştirme |
+| `DrugItemController.cs` | ~443 | 1 | CanBeThrown => false (drop/throw devre dışı) ✅ |
+| `EnhancedItemInspector.cs` | ~1500 | 1 | Drug RMB engeli + drug hint array'leri ✅ |
 | `ToolOutlineManager.cs` | ~200 | 1 | Tutarlı highlight |
 | `CheatPanel.cs` | — | 2 | Seed + yolcu üretme komutları |
 
@@ -626,12 +632,12 @@ M1-G4b (Ortam Cilası) ───→ M1-G1 bitmeli
 
 | Madde | Risk | Neden |
 |-------|------|-------|
-| P0-2 (ESC/Cursor) | 🔴 Yüksek | 5+ fix yapılmış hâlâ sorun var. Her sisteme dokunuyor. |
+| P0-2 (ESC/Cursor) | ✅ Kod bitti | InputStateManager ile kökünden çözüldü, DEV testi bekliyor. |
 | M1-G1 Defter UI | 🔴 Yüksek | UI işleri her zaman tahmin edilenden uzun sürer. |
 | P0-1 (NPC Tekrar) | ✅ Çözüldü | Cooldown queue ile minimal değişiklik, SmartNPCSpawner'a dokunulmadı. |
 | M1-G2 (Guard AI) | 🟡 Orta | Behavior Designer tree değişiklikleri kırılgan. |
-| P0-5 (Fizik) | 🟡 Orta | Kapsam kontrolü zor — yüzlerce prefab var. |
-| P0-4 (Ayarlar) | 🟢 Düşük | Küçük, izole iş. |
+| P0-5 (Fizik) | ✅ Drug fix bitti | Drug drop/throw devre dışı. Duvar collider DEV'de. NPC clipping AI sprint'ine ertelendi. |
+| P0-4 (Ayarlar) | ✅ Çözüldü | PlayerPrefsSaveLoadController ile düzeltildi. |
 | P0-6 (Tutorial) | 🟢 Düşük | Mevcut altyapı var, sadece tutarlılık. |
 
 ## 🔔 TextTable Hatırlatma (Sprint Sonunda)
