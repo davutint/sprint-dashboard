@@ -27,9 +27,6 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      # Copy sprint MDs into the build output so the app can fetch them
-      - run: cp -r sprints dist/sprints
-
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
