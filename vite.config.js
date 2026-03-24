@@ -9,8 +9,9 @@ export default defineConfig({
     tailwindcss(),
     viteStaticCopy({
       targets: [
-        { src: 'sprints/*', dest: 'sprints' }
-      ]
+        { src: 'sprints/*', dest: '' }
+      ],
+      structured: true
     })
   ],
   base: '/sprint-dashboard/',
